@@ -6,47 +6,7 @@ const tripsSocket = async (io, deviceID) => {
   try {
     let emitAndFetchFunction = async () => {
       try {
-        const Query = `SELECT 
-        json_arrayagg(
-            json_object(
-                'trip_id', TS.trip_id, 
-                'startTime', TS.trip_start_time, 
-                'device_id', TS.device_id, 
-                'location_data', (
-                    SELECT json_arrayagg(
-                        json_object(
-                            'latitude', td.lat, 
-                            'longitude', td.lng, 
-                            'speed', td.spd
-                        )
-                    ) 
-                    FROM TripData td 
-                    WHERE td.trip_id = TS.trip_id 
-                    ORDER BY td.timestamp ASC
-                ),
-                'alerts', (
-                    SELECT json_arrayagg(
-                        json_object(
-                            'event', TD.event,
-                            'message',TD.message,
-                            'device_id',TD.device_id,
-                            'timestamp',TD.timestamp,
-                            'latitude',TD.lat,
-                            'longitude',TD.lng,
-                            'spd',TD.spd,
-                            'vehicle_id',TD.vehicle_id
-                        )
-                    ) 
-                    FROM TripData TD 
-                    WHERE TD.trip_id = TS.trip_id 
-                    AND TD.event NOT IN ('IGS', 'LOC')
-                )
-            )
-        ) AS tripDetails 
-         FROM 
-        TripSummary TS 
-        WHERE 
-        TS.trip_status = 0`;
+        const Query = `SELECT json_arrayagg(json_object('trip_id', TS.trip_id, 'startTime', TS.trip_start_time, 'device_id', TS.device_id, 'location_data', (SELECT json_arrayagg(json_object('latitude', td.lat, 'longitude', td.lng, 'speed', td.spd)) FROM TripData td WHERE td.trip_id = TS.trip_id ORDER BY td.timestamp ASC), 'alerts', (SELECT json_arrayagg(json_object('event', TD.event, 'message', TD.message, 'device_id', TD.device_id, 'timestamp', TD.timestamp, 'latitude', TD.lat, 'longitude', TD.lng, 'spd', TD.spd, 'vehicle_id', TD.vehicle_id, 'jsonData', TD.jsonData)) FROM TripData TD WHERE TD.trip_id = TS.trip_id AND TD.event NOT IN ('IGS', 'LOC')))) AS tripDetails FROM TripSummary TS WHERE TS.trip_status = 0;`;
 
         connection = await pool.getConnection();
 
