@@ -44,9 +44,11 @@ const mqttTrigger = () => {
         let data = message.toString();
         // console.table([data, topic]);
         const parseData = JSON.parse(data);
-        // console.log("MQTT device ID", parseData.device_id);
         axios
-          .post("http://localhost:3000/dev/validateJson", { msg: data })
+          .post(
+            "https://5n6zcgmq7a.execute-api.ap-south-1.amazonaws.com/dev/validateJson",
+            { msg: data }
+          )
           .then((response) => {
             console.log(
               "API Response:",
