@@ -15,7 +15,7 @@ const tripsSocket = async (io, deviceID, connection1, connection2) => {
         tripsummarydetails.map(async (el) => {
           //inside the map function
 
-          let tripData = `SELECT json_arrayagg(json_object('location_data',(SELECT json_arrayagg(json_object('latitude',td.lat,'longitude',td.lng,'speed',td.spd,'tripID',td.trip_id)) FROM TripData td WHERE td.trip_id ='${el.trip_id}' ORDER BY td.timestamp ASC),'alerts',(SELECT json_arrayagg(json_object('event',TD.event,'message',TD.message,'device_id',TD.device_id,'timestamp',TD.timestamp,'latitude',TD.lat,'longitude',TD.lng,'spd',TD.spd,'vehicle_id',TD.vehicle_id,'jsonData',TD.jsonData,'tripID',TD.trip_id)) FROM TripData TD WHERE TD.trip_id = '${el.trip_id}' AND TD.event NOT IN ('IGS', 'LOC')))) AS tripDetails;`;
+          let tripData = `SELECT json_arrayagg(json_object('location_data',(SELECT json_arrayagg(json_object('latitude',td.lat,'longitude',td.lng,'speed',td.spd,'tripID',td.trip_id,'Timestamp',td.timestamp)) FROM TripData td WHERE td.trip_id ='${el.trip_id}' ORDER BY td.timestamp ASC),'alerts',(SELECT json_arrayagg(json_object('event',TD.event,'message',TD.message,'device_id',TD.device_id,'timestamp',TD.timestamp,'latitude',TD.lat,'longitude',TD.lng,'spd',TD.spd,'vehicle_id',TD.vehicle_id,'jsonData',TD.jsonData,'tripID',TD.trip_id)) FROM TripData TD WHERE TD.trip_id = '${el.trip_id}' AND TD.event NOT IN ('IGS', 'LOC')))) AS tripDetails;`;
 
           const [tripSummData] = await connection2.execute(tripData);
 
@@ -24,7 +24,9 @@ const tripsSocket = async (io, deviceID, connection1, connection2) => {
         })
       ); //end of map func
 
-      allData.map((el) => {
+      let filteredData = allData.filter((el) => el.device_id === deviceID);
+
+      filteredData.map((el) => {
         io.emit(el.trip_id, el);
       });
     } else {
