@@ -6,6 +6,7 @@ const { client } = require("./mqtt");
 const cors = require("cors");
 const { tripsSocket } = require("./socketFunc");
 const pool = require("./db.js");
+const pool2 = require("./db2.js");
 
 const app = express();
 app.use(express.json());
@@ -13,6 +14,13 @@ app.use(cors());
 
 const server = http.createServer(app);
 const io = socketIo(server);
+let connection1;
+let connection2;
+//connections
+(async () => {
+  connection2 = await pool2.getConnection();
+  connection1 = await pool.getConnection();
+})();
 
 // send data from database through this
 // tripsSocket(io);
@@ -38,24 +46,27 @@ const mqttTrigger = () => {
         const parseData = JSON.parse(data);
         // console.log("MQTT device ID", parseData.device_id);
         axios
-          .post(
-            "https://5n6zcgmq7a.execute-api.ap-south-1.amazonaws.com/dev/validateJson",
-            { msg: data }
-          )
+          .post("http://localhost:3000/dev/validateJson", { msg: data })
           .then((response) => {
-            // console.log("API Response:", response.data.message);
+            console.log(
+              "API Response:",
+              response.data.message ? response.data.message : response
+            );
 
             if (response) {
-              tripsSocket(io, parseData.device_id);
+              tripsSocket(io, parseData.device_id, connection1, connection2);
             } else {
               console.log(
                 "Error in emmiting data to socket!::::",
-                err.response.data
+                err.response.data ? err.response.data : err
               );
             }
           })
           .catch((err) => {
-            console.error("Error::::::", err.response.data.message);
+            console.error(
+              "Error::::::",
+              err.response.data ? err.response.data.message : err
+            );
           });
       } else {
         console.log("Received null message from MQTT");
