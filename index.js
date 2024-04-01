@@ -46,7 +46,10 @@ const mqttTrigger = () => {
         const parseData = JSON.parse(data);
         // https://5n6zcgmq7a.execute-api.ap-south-1.amazonaws.com/dev/validateJson
         axios
-          .post("http://localhost:3000/dev/validateJson", { msg: data })
+          .post(
+            "https://5n6zcgmq7a.execute-api.ap-south-1.amazonaws.com/dev/validateJson",
+            { msg: data }
+          )
           .then((response) => {
             if (
               response.data &&
