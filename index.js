@@ -44,30 +44,60 @@ const mqttTrigger = () => {
         let data = message.toString();
         // console.table([data, topic]);
         const parseData = JSON.parse(data);
+        // https://5n6zcgmq7a.execute-api.ap-south-1.amazonaws.com/dev/validateJson
         axios
-          .post(
-            "https://5n6zcgmq7a.execute-api.ap-south-1.amazonaws.com/dev/validateJson",
-            { msg: data }
-          )
+          .post("http://localhost:3000/dev/validateJson", { msg: data })
           .then((response) => {
-            console.log(
-              "API Response:",
-              response.data.message ? response.data.message : response
-            );
-
-            if (response) {
-              tripsSocket(io, parseData.device_id, connection1, connection2);
-            } else {
-              console.log(
-                "Error in emmiting data to socket!::::",
-                err.response.data ? err.response.data : err
-              );
+            if (
+              response.data &&
+              parseData.device_id == response.data.device_id
+            ) {
+              const dataToEmit = {
+                location_data: [
+                  {
+                    latitude: parseData.td.lat,
+                    longitude: parseData.td.lng,
+                    speed: parseData.td.spd,
+                    timestamp: parseData.timestamp,
+                  },
+                ],
+                tripSummaryDetails: [
+                  {
+                    event: parseData.event,
+                    message: parseData.message,
+                    device_id: parseData.device_id,
+                    timestamp: parseData.timestamp,
+                    latitude: parseData.td.lat,
+                    longitude: parseData.td.lng,
+                    speed: parseData.spd,
+                    vehicle_id: response.data.vehicle_id,
+                    tripID: response.data.trip_id,
+                    jsonData: JSON.stringify(parseData),
+                  },
+                ],
+                deviceHealth: [
+                  {
+                    cpu_load: parseData.device_health
+                      ? parseData.device_health.cpu_load
+                      : 0,
+                    cpu_temp: parseData.device_health
+                      ? parseData.device_health.cpu_temp
+                      : 0,
+                    memory: parseData.device_health
+                      ? parseData.device_health.memory
+                      : 0,
+                    ignition: parseData.ignition ? parseData.ignition : 0,
+                  },
+                ],
+              };
+              console.log("Data Emmited!", parseData.device_id);
+              io.emit(response.data.trip_id, dataToEmit);
             }
           })
           .catch((err) => {
             console.error(
               "Error::::::",
-              err.response.data ? err.response.data.message : err
+              err.response ? err.response.data : err
             );
           });
       } else {
