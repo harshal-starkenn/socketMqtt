@@ -51,11 +51,13 @@ const mqttTrigger = () => {
             { msg: data }
           )
           .then((response) => {
+            console.log(parseData.device_id);
             if (
               response.data &&
               parseData.device_id == response.data.device_id
             ) {
               const dataToEmit = {
+                trip_id: response.data.trip_id,
                 location_data: [
                   {
                     latitude: parseData.td.lat,
@@ -90,6 +92,13 @@ const mqttTrigger = () => {
                       ? parseData.device_health.memory
                       : 0,
                     ignition: parseData.ignition ? parseData.ignition : 0,
+                    rssi: parseData.td.rssi ? parseData.td.rssi : 0,
+                    nsv: parseData.td.nsv ? parseData.td.nsv : 0,
+                    utc: parseData.td.utc ? parseData.td.utc : 0,
+                    driver_status: parseData.device_health
+                      ? parseData.device_health.driver_status
+                      : 0,
+                    date: parseData.td.data ? parseData.td.date : 0,
                   },
                 ],
               };
